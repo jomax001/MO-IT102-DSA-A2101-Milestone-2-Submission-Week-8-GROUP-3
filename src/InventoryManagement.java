@@ -72,9 +72,10 @@ public class InventoryManagement {
             System.out.println("\nInventory Management System");
             System.out.println("1. Add Item");
             System.out.println("2. Delete Item");
-            System.out.println("3. Search Item");
-            System.out.println("4. Display Sorted Inventory");
-            System.out.println("5. Exit");
+            System.out.println("3. Search Item by Engine Number");
+            System.out.println("4. Search Item by Brand");
+            System.out.println("5. Display Sorted Inventory");
+            System.out.println("6. Exit");
             System.out.print("Enter your choice: ");
             choice = scanner.nextLine();
 
@@ -87,18 +88,21 @@ public class InventoryManagement {
                     deleteItem(scanner);     // Remove an item
                     break;
                 case "3":
-                    searchItem(scanner);     // Search for an item
+                    searchItemByEngineNumber(scanner);     // Search for an item
                     break;
                 case "4":
-                    displaySortedInventory();  // Show the sorted inventory
+                    searchItemByBrand(scanner);
                     break;
                 case "5":
+                    displaySortedInventory();  // Show the sorted inventory
+                    break;
+                case "6":
                     System.out.println("Exiting...");  // Goodbye message
                     break;
                 default:
                     System.out.println("Invalid choice. Please try again."); // If the user enters something wrong.
             }
-        } while (!choice.equals("5")); // Keep going until the user types "5."
+        } while (!choice.equals("6")); // Keep going until the user types "5."
 
         // Before exiting, save the changes we made back to our file.
         saveInventoryToCSV();
@@ -176,7 +180,7 @@ public class InventoryManagement {
     }
 
     // Search for an item by engine number.
-    private static void searchItem(Scanner scanner) {
+    private static void searchItemByEngineNumber(Scanner scanner) {
         System.out.print("Enter Engine Number to search: ");
         String engineNumber = scanner.nextLine();
 
@@ -198,6 +202,33 @@ public class InventoryManagement {
             //Inform the user that the item they search for does not exist.
             System.out.println("Item not found!");
         }
+    }
+
+        //New Method for Search by Brand
+    private static void searchItemByBrand(Scanner scanner) {
+        System.out.print("Enter Brand to search: ");
+        String brand = scanner.nextLine();
+        boolean found = false;
+
+        System.out.println("Items found with Brand " + brand + ":");
+        System.out.println("-----------------------------------------------------------------------------------");
+        System.out.printf("%-12s %-12s %-10s %-15s %-10s\n", "Date Entered", "Stock Label", "Brand", "Engine Number", "Status");
+        System.out.println("-----------------------------------------------------------------------------------");
+
+        for (List<InventoryItem> items : inventoryMap.values()) {
+            for (InventoryItem item : items) {
+                if (item.brand.equalsIgnoreCase(brand)) {
+                    System.out.printf("%-12s %-12s %-10s %-15s %-10s\n", item.dateEntered, item.stockLabel, item.brand, item.engineNumber, item.status);
+                    found = true;
+                }
+            }
+        }
+
+        if (!found) {
+            System.out.println("No items found with that brand.");
+        }
+
+        System.out.println("-----------------------------------------------------------------------------------");
     }
 
     // Display the inventory, sorted by category and brand.
@@ -360,76 +391,16 @@ public class InventoryManagement {
                     onHandItems.add(item);
                     break;
                 default:
-                    onHandItems.add(item); //  If the status isn't recognized, put it in "On-Hand."
+                    onHandItems.add(item);
                     break;
             }
         }
 
-        // Sort each category list by brand.
-        newItems = mergeSort(newItems);
-        oldItems = mergeSort(oldItems);
-        soldItems = mergeSort(soldItems);
-        onHandItems = mergeSort(onHandItems);
-
-        //Merge all the lists together again after it has been sorted by brand.
         List<InventoryItem> sortedInventory = new ArrayList<>();
         sortedInventory.addAll(newItems);
-        sortedInventory.addAll(oldItems);
         sortedInventory.addAll(soldItems);
         sortedInventory.addAll(onHandItems);
 
         return sortedInventory;
-    }
-
-    // Sorts a list of inventory items by brand name.
-    private static List<InventoryItem> mergeSort(List<InventoryItem> list) {
-        //If there is only one item, then its already sorted, just return it.
-        if (list.size() <= 1) {
-            return list;
-        }
-
-        // Divide the list into two smaller parts.
-        int middle = list.size() / 2;
-        List<InventoryItem> left = new ArrayList<>(list.subList(0, middle));
-        List<InventoryItem> right = new ArrayList<>(list.subList(middle, list.size()));
-
-        // Sort each part recursively.
-        left = mergeSort(left);
-        right = mergeSort(right);
-
-        // Merge the sorted parts.
-        return merge(left, right);
-    }
-
-    // Merges two sorted lists into one.
-    private static List<InventoryItem> merge(List<InventoryItem> left, List<InventoryItem> right) {
-        List<InventoryItem> result = new ArrayList<>();
-        int leftIndex = 0;
-        int rightIndex = 0;
-
-        // Pick the smaller element from each list until one runs out.
-        while (leftIndex < left.size() && rightIndex < right.size()) {
-            if (left.get(leftIndex).brand.compareToIgnoreCase(right.get(rightIndex).brand) <= 0) {
-                result.add(left.get(leftIndex));
-                leftIndex++;
-            } else {
-                result.add(right.get(rightIndex));
-                rightIndex++;
-            }
-        }
-
-        // Add the remaining elements from the left list (if any).
-        while (leftIndex < left.size()) {
-            result.add(left.get(leftIndex));
-            leftIndex++;
-        }
-
-        // Add the remaining elements from the right list (if any).
-        while (rightIndex < right.size()) {
-            result.add(right.get(rightIndex));
-            rightIndex++;
-        }
-
-        return result;
     }
 }
